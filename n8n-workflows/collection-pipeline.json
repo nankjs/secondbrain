@@ -1,0 +1,156 @@
+{
+  "_meta": {
+    "name": "세컨드브레인 주간 수집 파이프라인",
+    "description": "매주 월요일 09:00 KST에 신뢰 소스에서 자동 수집 후 Claude /literature 스킬로 처리하여 Obsidian Vault에 저장",
+    "version": "1.0",
+    "created": "2026-04-10",
+    "phase": "P2"
+  },
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "Cron Trigger",
+      "type": "n8n-nodes-base.cron",
+      "parameters": {
+        "cronExpression": "0 9 * * 1",
+        "timezone": "Asia/Seoul"
+      },
+      "description": "매주 월요일 09:00 KST 실행"
+    },
+    {
+      "id": "rss-miniflux",
+      "name": "MiniFlux RSS 수집",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "GET",
+        "url": "http://miniflux:8080/v1/entries?status=unread&limit=50",
+        "authentication": "basicAuth",
+        "options": {
+          "headers": {
+            "Accept": "application/json"
+          }
+        }
+      },
+      "description": "MiniFlux에서 읽지 않은 기사 50개 수집"
+    },
+    {
+      "id": "arxiv-collect",
+      "name": "ArXiv 논문 수집",
+      "type": "n8n-nodes-base.executeCommand",
+      "parameters": {
+        "command": "python C:/KJS/AVARTA/secondBrain/scripts/collect-arxiv.py --query combined --max 5 --days 14"
+      },
+      "description": "ArXiv cs.AI/cs.LG 최신 논문 5개"
+    },
+    {
+      "id": "yfinance-collect",
+      "name": "yfinance ETF 데이터 수집",
+      "type": "n8n-nodes-base.executeCommand",
+      "parameters": {
+        "command": "python C:/KJS/AVARTA/secondBrain/scripts/collect-yfinance.py --tickers SPY QQQ IVV"
+      },
+      "description": "SPY/QQQ/IVV 주간 시세 + 뉴스"
+    },
+    {
+      "id": "merge-data",
+      "name": "데이터 병합 및 정규화",
+      "type": "n8n-nodes-base.merge",
+      "parameters": {
+        "mode": "append"
+      },
+      "description": "RSS + ArXiv + yfinance 데이터 통합"
+    },
+    {
+      "id": "dedup-filter",
+      "name": "중복 제거",
+      "type": "n8n-nodes-base.executeCommand",
+      "parameters": {
+        "command": "python C:/KJS/AVARTA/secondBrain/scripts/dedup.py check {{ $json.url }}"
+      },
+      "description": "이미 수집된 URL 필터링"
+    },
+    {
+      "id": "claude-literature",
+      "name": "Claude /literature 스킬 처리",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "headerAuth",
+        "options": {
+          "headers": {
+            "x-api-key": "={{ $env.ANTHROPIC_API_KEY }}",
+            "anthropic-version": "2023-06-01",
+            "content-type": "application/json"
+          }
+        },
+        "body": {
+          "model": "claude-haiku-4-5-20251001",
+          "max_tokens": 1024,
+          "messages": [
+            {
+              "role": "user",
+              "content": "다음 원문을 /literature 스킬로 처리해줘.\n\ndomain: {{ $json.domain }}\nsource_url: {{ $json.url }}\nsource_title: {{ $json.title }}\nsource_content: {{ $json.content }}\n\n반환: YAML frontmatter + 마크다운 노트 형식"
+            }
+          ]
+        }
+      },
+      "description": "Claude API로 /literature 스킬 실행 (haiku 사용으로 비용 최소화)"
+    },
+    {
+      "id": "save-obsidian",
+      "name": "Obsidian Vault 저장",
+      "type": "n8n-nodes-base.executeCommand",
+      "parameters": {
+        "command": "python C:/KJS/AVARTA/secondBrain/scripts/save-to-vault.py --content \"{{ $json.content }}\" --domain {{ $json.domain }} --date {{ $now.format('YYYY-MM-DD') }}"
+      },
+      "description": "생성된 노트를 01-literature/ 폴더에 저장"
+    },
+    {
+      "id": "update-index",
+      "name": "/index 업데이트",
+      "type": "n8n-nodes-base.executeCommand",
+      "parameters": {
+        "command": "python C:/KJS/AVARTA/secondBrain/scripts/generate-index.py"
+      },
+      "description": "수집 완료 후 인덱스 페이지 재생성"
+    },
+    {
+      "id": "slack-notify",
+      "name": "Slack 알림 (선택)",
+      "type": "n8n-nodes-base.slack",
+      "parameters": {
+        "channel": "#secondbrain-alerts",
+        "text": "✅ 세컨드브레인 주간 수집 완료!\n수집: {{ $json.count }}개 노트\n시간: {{ $now.format('YYYY-MM-DD HH:mm') }}"
+      },
+      "description": "수집 완료 Slack 알림 (SLACK_WEBHOOK_URL 설정 시 활성화)"
+    },
+    {
+      "id": "error-handler",
+      "name": "오류 처리",
+      "type": "n8n-nodes-base.slack",
+      "parameters": {
+        "channel": "#secondbrain-alerts",
+        "text": "❌ 세컨드브레인 수집 오류!\n{{ $json.error }}\n시각: {{ $now.format('YYYY-MM-DD HH:mm') }}"
+      },
+      "description": "오류 발생 시 Slack 알림"
+    }
+  ],
+  "connections": {
+    "trigger": ["rss-miniflux", "arxiv-collect", "yfinance-collect"],
+    "rss-miniflux": ["merge-data"],
+    "arxiv-collect": ["merge-data"],
+    "yfinance-collect": ["merge-data"],
+    "merge-data": ["dedup-filter"],
+    "dedup-filter": ["claude-literature"],
+    "claude-literature": ["save-obsidian"],
+    "save-obsidian": ["update-index"],
+    "update-index": ["slack-notify"]
+  },
+  "settings": {
+    "errorWorkflow": "error-handler",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "timezone": "Asia/Seoul"
+  }
+}

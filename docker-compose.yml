@@ -9,11 +9,11 @@ services:
 
   # ── Phase B: n8n 워크플로우 자동화 ─────────────────────────
   n8n:
-    image: n8nio/n8n:latest
+    image: n8nio/n8n:1.84.3
     container_name: secondbrain-n8n
     restart: unless-stopped
     ports:
-      - "5678:5678"
+      - "15678:5678"
     environment:
       - N8N_BASIC_AUTH_ACTIVE=${N8N_BASIC_AUTH_ACTIVE:-true}
       - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER:-admin}
