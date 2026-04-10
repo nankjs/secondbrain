@@ -1,0 +1,54 @@
+# 환경 변수 (절대 커밋 금지)
+.env
+.env.local
+.env.*.local
+
+# 로그
+logs/
+*.log
+
+# 의존성
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Docker 볼륨 데이터
+data/
+.data/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Obsidian 캐시 (설정 파일은 포함)
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache
+
+# SQLite
+*.db
+*.sqlite
+*.sqlite3
+
+# 임시 파일
+tmp/
+temp/
+*.tmp
+
+# 빌드 산출물
+dist/
+build/
+.next/
+out/

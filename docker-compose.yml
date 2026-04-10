@@ -1,0 +1,85 @@
+version: "3.8"
+
+# ============================================================
+# 세컨드브레인 Docker Compose
+# Phase별 서비스 주석 해제하여 활성화
+# ============================================================
+
+services:
+
+  # ── Phase B: n8n 워크플로우 자동화 ─────────────────────────
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: secondbrain-n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=${N8N_BASIC_AUTH_ACTIVE:-true}
+      - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER:-admin}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD}
+      - N8N_HOST=${N8N_HOST:-localhost}
+      - N8N_PORT=${N8N_PORT:-5678}
+      - N8N_PROTOCOL=http
+      - GENERIC_TIMEZONE=Asia/Seoul
+      - TZ=Asia/Seoul
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n-workflows:/home/node/workflows
+    networks:
+      - secondbrain-net
+
+  # ── Phase B: MiniFlux RSS 리더 ─────────────────────────────
+  miniflux:
+    image: miniflux/miniflux:latest
+    container_name: secondbrain-miniflux
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=${MINIFLUX_DATABASE_URL}
+      - RUN_MIGRATIONS=1
+      - CREATE_ADMIN=1
+      - ADMIN_USERNAME=${MINIFLUX_ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${MINIFLUX_ADMIN_PASSWORD}
+    depends_on:
+      - miniflux-db
+    networks:
+      - secondbrain-net
+
+  miniflux-db:
+    image: postgres:15-alpine
+    container_name: secondbrain-miniflux-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=miniflux
+      - POSTGRES_PASSWORD=miniflux
+      - POSTGRES_DB=miniflux
+    volumes:
+      - miniflux_db_data:/var/lib/postgresql/data
+    networks:
+      - secondbrain-net
+
+  # ── Phase C: LightRAG 벡터 DB ──────────────────────────────
+  # (Phase C 시작 시 주석 해제)
+  # lightrag:
+  #   image: hkunlp/lightrag:latest
+  #   container_name: secondbrain-lightrag
+  #   restart: unless-stopped
+  #   ports:
+  #     - "7860:7860"
+  #   environment:
+  #     - OPENAI_API_KEY=${OPENAI_API_KEY}
+  #   volumes:
+  #     - lightrag_data:/app/data
+  #   networks:
+  #     - secondbrain-net
+
+volumes:
+  n8n_data:
+  miniflux_db_data:
+  # lightrag_data:  # Phase C 시 활성화
+
+networks:
+  secondbrain-net:
+    driver: bridge
