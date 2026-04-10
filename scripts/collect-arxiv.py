@@ -17,7 +17,7 @@ QUERIES = {
     "ai": "cat:cs.AI",
     "ml": "cat:cs.LG",
     "nlp": "cat:cs.CL",
-    "combined": "cat:cs.AI+OR+cat:cs.LG+OR+cat:cs.CL",
+    "combined": "cat:cs.AI OR cat:cs.LG OR cat:cs.CL",
 }
 
 ARXIV_API = "https://export.arxiv.org/api/query"

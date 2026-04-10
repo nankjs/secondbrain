@@ -1,0 +1,97 @@
+{
+  "name": "secondbrain-weekly-collection",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 1"
+            }
+          ]
+        }
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000001",
+      "name": "Every Monday 09:00 KST",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://host.docker.internal:8080/v1/entries?status=unread&limit=20&order=published_at&direction=desc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Auth-Username",
+              "value": "admin"
+            },
+            {
+              "name": "X-Auth-Password",
+              "value": "secondbrain2026"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0002-0002-0002-000000000002",
+      "name": "MiniFlux: Get Unread",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [460, 200]
+    },
+    {
+      "parameters": {
+        "command": "python C:/KJS/AVARTA/secondBrain/scripts/collect-arxiv.py --query combined --max 5 --days 14"
+      },
+      "id": "a1b2c3d4-0003-0003-0003-000000000003",
+      "name": "ArXiv: Collect Papers",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [460, 400]
+    },
+    {
+      "parameters": {
+        "command": "python C:/KJS/AVARTA/secondBrain/scripts/collect-yfinance.py --tickers SPY QQQ IVV"
+      },
+      "id": "a1b2c3d4-0004-0004-0004-000000000004",
+      "name": "yfinance: ETF Data",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [460, 550]
+    },
+    {
+      "parameters": {
+        "command": "python C:/KJS/AVARTA/secondBrain/scripts/generate-index.py"
+      },
+      "id": "a1b2c3d4-0005-0005-0005-000000000005",
+      "name": "Rebuild Index",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [680, 390]
+    }
+  ],
+  "connections": {
+    "Every Monday 09:00 KST": {
+      "main": [
+        [
+          {"node": "MiniFlux: Get Unread", "type": "main", "index": 0},
+          {"node": "ArXiv: Collect Papers", "type": "main", "index": 0},
+          {"node": "yfinance: ETF Data", "type": "main", "index": 0}
+        ]
+      ]
+    },
+    "ArXiv: Collect Papers": {
+      "main": [[{"node": "Rebuild Index", "type": "main", "index": 0}]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Seoul"
+  },
+  "tags": []
+}
