@@ -52,3 +52,26 @@ dist/
 build/
 .next/
 out/
+quartz/node_modules/
+quartz/public/
+
+# Quartz 프레임워크 소스 (재설치 가능)
+quartz/quartz/
+quartz/.github/
+quartz/docs/
+quartz/static/
+quartz/styles/
+quartz/CODE_OF_CONDUCT.md
+quartz/Dockerfile
+quartz/LICENSE.txt
+quartz/README.md
+quartz/tsconfig.json
+quartz/globals.d.ts
+quartz/index.d.ts
+quartz/.node-version
+quartz/.npmrc
+quartz/.prettierignore
+quartz/.prettierrc
+quartz/.gitattributes
+quartz/package.json
+quartz/package-lock.json
