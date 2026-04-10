@@ -61,24 +61,28 @@ services:
       - secondbrain-net
 
   # ── Phase C: LightRAG 벡터 DB ──────────────────────────────
-  # (Phase C 시작 시 주석 해제)
-  # lightrag:
-  #   image: hkunlp/lightrag:latest
-  #   container_name: secondbrain-lightrag
-  #   restart: unless-stopped
-  #   ports:
-  #     - "7860:7860"
-  #   environment:
-  #     - OPENAI_API_KEY=${OPENAI_API_KEY}
-  #   volumes:
-  #     - lightrag_data:/app/data
-  #   networks:
-  #     - secondbrain-net
+  lightrag:
+    image: ghcr.io/hkuds/lightrag:latest
+    container_name: secondbrain-lightrag
+    restart: unless-stopped
+    ports:
+      - "9621:9621"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - LLM_BINDING=openai
+      - LLM_MODEL=gpt-4o-mini
+      - EMBEDDING_BINDING=openai
+      - EMBEDDING_MODEL=text-embedding-3-small
+      - MAX_TOKENS=32768
+    volumes:
+      - lightrag_data:/app/data
+    networks:
+      - secondbrain-net
 
 volumes:
   n8n_data:
   miniflux_db_data:
-  # lightrag_data:  # Phase C 시 활성화
+  lightrag_data:
 
 networks:
   secondbrain-net:

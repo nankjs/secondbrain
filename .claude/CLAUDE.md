@@ -25,16 +25,18 @@ OBSIDIAN_VAULT_PATH=C:/Users/kjswi/Documents/googleDrive/ObsiVault
 | `/permanent` | 문헌 노트 → 영구 노트 (02-permanent/) |
 | `/lint` | Frontmatter 검증 및 정규화 |
 | `/index` | 인덱스 페이지 자동 생성 (06-index/) |
+| `/relate` | 두 노트 간 관계 분석 (타입/강도/설명) |
+| `/analyze` | 질문 → LightRAG 검색 → 즉시 분석 보고서 |
 
 ## 구현 현황
 
 | Phase | 상태 | 내용 |
 |-------|------|------|
 | P0 | ✅ 완료 | Git, Docker, 폴더 구조 |
-| P1 | ✅ 완료 | Obsidian Vault + 스킬 5개 + 샘플 8개 |
-| P2 | ⏳ 대기 | n8n 수집 파이프라인 |
-| P3 | ⏳ 대기 | LightRAG 지식 연결 |
-| P4 | ⏳ 대기 | 즉시 분석 |
+| P1 | ✅ 완료 | Obsidian Vault + 스킬 6개 + 샘플 8개 |
+| P2 | ✅ 완료 | n8n + MiniFlux + ArXiv + yfinance 수집 파이프라인 |
+| P3 | ✅ 완료 | LightRAG 지식 연결 (8개 노트 임베딩, 자동 링크) |
+| P4 | ✅ 완료 | /analyze 스킬 + 즉시 분석 보고서 |
 | P5 | ⏳ 선택 | Notion 공유 |
 | P6 | ⏳ 선택 | Quartz 공개 |
 
