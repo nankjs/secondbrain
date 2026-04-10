@@ -31,7 +31,7 @@ OBSIDIAN_VAULT_PATH=C:/Users/kjswi/Documents/googleDrive/ObsiVault
 | Phase | 상태 | 내용 |
 |-------|------|------|
 | P0 | ✅ 완료 | Git, Docker, 폴더 구조 |
-| P1 | 🔄 진행 중 | Obsidian Vault + 스킬 정의 |
+| P1 | ✅ 완료 | Obsidian Vault + 스킬 5개 + 샘플 8개 |
 | P2 | ⏳ 대기 | n8n 수집 파이프라인 |
 | P3 | ⏳ 대기 | LightRAG 지식 연결 |
 | P4 | ⏳ 대기 | 즉시 분석 |
