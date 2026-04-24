@@ -28,6 +28,23 @@ OBSIDIAN_VAULT_PATH=C:/Users/kjswi/Documents/googleDrive/ObsiVault
 | `/relate` | 두 노트 간 관계 분석 (타입/강도/설명) |
 | `/analyze` | 질문 → LightRAG 검색 → 즉시 분석 보고서 |
 
+## Claude의 역할 — 온디맨드 오케스트레이터
+
+**핵심 원칙**: Claude는 사용자 요청 시에만 작동한다. 토큰 비용 때문에 자동 실행하지 않는다.
+
+```
+[자동] n8n 파이프라인 → 수집/임베딩/연결/동기화 (Claude 개입 없음)
+[온디맨드] 사용자 요청 → Claude가 Vault 읽기/쓰기, 리서치, 분석 수행
+```
+
+Claude가 사용하는 도구:
+- **Zettelkasten MCP** (`C:/KJS/tools/zettelkasten-mcp`): Vault 직접 읽기/쓰기
+- **LightRAG** (`localhost:9621`): 기존 지식 시맨틱 검색
+- **GPT Researcher** (`localhost:8888`): 심층 웹 리서치
+- **Gemini Flash**: Critic Bot 역할 (리서치 비판 및 보완)
+
+상세 설계 의도: `Docs/concept-claude-orchestrator.md` 참조
+
 ## 구현 현황
 
 | Phase | 상태 | 내용 |
@@ -35,10 +52,11 @@ OBSIDIAN_VAULT_PATH=C:/Users/kjswi/Documents/googleDrive/ObsiVault
 | P0 | ✅ 완료 | Git, Docker, 폴더 구조 |
 | P1 | ✅ 완료 | Obsidian Vault + 스킬 6개 + 샘플 8개 |
 | P2 | ✅ 완료 | n8n + MiniFlux + ArXiv + yfinance 수집 파이프라인 |
-| P3 | ✅ 완료 | LightRAG 지식 연결 (8개 노트 임베딩, 자동 링크) |
-| P4 | ✅ 완료 | /analyze 스킬 + 즉시 분석 보고서 |
-| P5 | ⏳ 선택 | Notion 공유 |
+| P3 | ✅ 완료 | LightRAG 지식 연결 (266개 노트 임베딩, 자동 링크) |
+| P4 | ✅ 완료 | /analyze 스킬 + GPT Researcher (DeepSeek V3) |
+| P5 | ✅ 완료 | Notion 동기화 (SecondBrain Vault DB) |
 | P6 | ⏳ 선택 | Quartz 공개 |
+| P7 | 🔜 예정 | 리서치 사이클 (Researcher+Critic Bot), 도메인 크롤러 |
 
 ## 태스크 파일
 

@@ -116,6 +116,8 @@ services:
       # 언어 설정
       - LANGUAGE=korean
       - REPORT_FORMAT=markdown
+    volumes:
+      - ./gpt-researcher-outputs:/usr/src/app/outputs
     networks:
       - secondbrain-net
 
