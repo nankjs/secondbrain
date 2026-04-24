@@ -30,7 +30,7 @@ VAULT_PATH = os.environ.get(
     "OBSIDIAN_VAULT_PATH",
     "C:/Users/kjswi/Documents/googleDrive/ObsiVault"
 )
-NOTION_TOKEN = os.environ.get("NOTION_TOKEN", "")
+NOTION_TOKEN = os.environ.get("NOTION_API_KEY", os.environ.get("NOTION_TOKEN", ""))
 NOTION_DATABASE_ID = os.environ.get("NOTION_DATABASE_ID", "")
 
 # 아바타 프로젝트 페이지 ID (세컨드브레인 DB의 부모)

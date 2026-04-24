@@ -16,7 +16,7 @@ import urllib.request
 import urllib.error
 from pathlib import Path
 
-LIGHTRAG_API = "http://localhost:9621"
+LIGHTRAG_API = os.environ.get("LIGHTRAG_API", "http://localhost:9621")
 VAULT_PATH = os.environ.get(
     "OBSIDIAN_VAULT_PATH",
     "C:/Users/kjswi/Documents/googleDrive/ObsiVault"

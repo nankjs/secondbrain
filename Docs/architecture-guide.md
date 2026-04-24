@@ -229,4 +229,75 @@ Gemini 북마크릿                     Claude Code 직접 작성
 
 ---
 
+
+  ---         
+  서비스별 로그인 정보 및 주의사항                                           
+  ---
+  
+  n8n — http://localhost:15678
+
+  ID: admin@secondbrain.local
+  PW: secondbrain2026!A
+  
+  activation key : 2e42462e-2542-4e72-9915-064cd6ed90c2
+  Copy and paste the license key into settings → usage → plan → enter activation key. You have 14 days to activate your license.
+
+  n8nAPIkey : eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlOWI2Njk5Ni0zMmVkLTQ5OTktYmFkNS0wMzE0YWIzZGRmNjQiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzc1ODI2NjAxfQ.bs1JpjsvY-WO9TybpaBzy6a1ibF8AvmrkSz7z3K6sjA
+
+  ---
+  MiniFlux — http://localhost:8080
+
+  ID: admin
+  PW: secondbrain2026
+
+  ▎ API는 Basic Auth 방식, 웹 UI도 동일 계정으로 로그인
+
+  ---
+  LightRAG — http://localhost:9621
+
+  로그인 없음 (auth_mode: disabled)
+  바로 접속되며 웹 UI에서 그래프 시각화·검색 테스트 가능
+
+  ---
+  Obsidian
+
+  로그인 없음 — Vault 경로만 열면 됨
+  경로: C:/Users/kjswi/Documents/googleDrive/ObsiVault/
+
+  ---
+  Quartz 공개 사이트
+
+  로그인 없음 — https://nankjs.github.io/secondbrain/
+
+  ---
+  주의사항 / 조치 필요 사항
+  ---
+  ┌───────────────────┬────────────────────────────┬────────────────────────────────────────────────────┐    
+  │       항목        │            상태            │                        조치                        │    
+  ├───────────────────┼────────────────────────────┼────────────────────────────────────────────────────┤    
+  │ Docker 컨테이너   │ 현재 모두 정상 실행 중     │ PC 재시작 후 docker compose up -d 필요             │    
+  ├───────────────────┼────────────────────────────┼────────────────────────────────────────────────────┤    
+  │ Gemini 북마크릿   │ 자동 시작 안 됨            │ 사용 전 python scripts/gemini-webhook.py 수동 실행 │    
+  │ 서버              │                            │  필요                                              │    
+  ├───────────────────┼────────────────────────────┼────────────────────────────────────────────────────┤    
+  │ LightRAG 임베딩   │ 새 노트 추가 시 자동 반영  │ 노트 추가 후 python scripts/embed-vault.py 수동    │    
+  │                   │ 안 됨                      │ 실행 필요                                          │    
+  ├───────────────────┼────────────────────────────┼────────────────────────────────────────────────────┤    
+  │ MiniFlux RSS      │ HN, Reuters 일부 피드      │ 네트워크 문제 (Docker DNS), 현재 ArXiv·매일경제는  │    
+  │                   │ 타임아웃                   │ 정상                                               │    
+  └───────────────────┴────────────────────────────┴────────────────────────────────────────────────────┘    
+
+  PC 재시작 후 복구 순서:
+  cd C:/KJS/AVARTA/secondBrain
+  docker compose up -d        # 모든 서버 재시작
+  # 이후 각 서비스 정상 확인
+
+
+
+
+
+
+
+
+
 *작성: Claude Sonnet 4.6 | 2026-04-10*

@@ -9,11 +9,14 @@ services:
 
   # ── Phase B: n8n 워크플로우 자동화 ─────────────────────────
   n8n:
-    image: n8nio/n8n:1.84.3
+    build:
+      context: .
+      dockerfile: Dockerfile.n8n
+    image: secondbrain-n8n:local
     container_name: secondbrain-n8n
     restart: unless-stopped
     ports:
-      - "15678:5678"
+      - "15678:15678"
     environment:
       - N8N_BASIC_AUTH_ACTIVE=${N8N_BASIC_AUTH_ACTIVE:-true}
       - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER:-admin}
@@ -23,9 +26,18 @@ services:
       - N8N_PROTOCOL=http
       - GENERIC_TIMEZONE=Asia/Seoul
       - TZ=Asia/Seoul
+      - OBSIDIAN_VAULT_PATH=/vault
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - LINEAR_API_KEY=${LINEAR_API_KEY}
+      - LINEAR_ISSUE_ID=${LINEAR_ISSUE_ID}
+      - NOTION_API_KEY=${NOTION_API_KEY}
+      - NOTION_DATABASE_ID=${NOTION_DATABASE_ID}
     volumes:
       - n8n_data:/home/node/.n8n
       - ./n8n-workflows:/home/node/workflows
+      - ./scripts:/home/node/scripts
+      - ${OBSIDIAN_VAULT_PATH}:/vault
     networks:
       - secondbrain-net
 
@@ -76,6 +88,34 @@ services:
       - MAX_TOKENS=32768
     volumes:
       - lightrag_data:/app/data
+    networks:
+      - secondbrain-net
+
+  # ── Phase D: GPT Researcher (심층 리서치) ──────────────────
+  gpt-researcher:
+    build:
+      context: .
+      dockerfile: Dockerfile.gpt-researcher
+    image: secondbrain-gpt-researcher:local
+    container_name: secondbrain-gpt-researcher
+    restart: unless-stopped
+    ports:
+      - "8888:8000"
+    environment:
+      # LLM: DeepSeek V3 (OpenAI 호환)
+      - OPENAI_API_KEY=${DEEPSEEK_API_KEY}
+      - OPENAI_BASE_URL=https://api.deepseek.com/v1
+      - FAST_LLM=openai:deepseek-chat
+      - SMART_LLM=openai:deepseek-chat
+      - STRATEGIC_LLM=openai:deepseek-chat
+      # 임베딩: OpenAI (DeepSeek 임베딩 미지원)
+      - EMBEDDING_PROVIDER=openai
+      - OPENAI_EMBEDDINGS_API_KEY=${OPENAI_API_KEY}
+      # 웹 검색: DuckDuckGo (무료, API 키 불필요)
+      - RETRIEVER=duckduckgo
+      # 언어 설정
+      - LANGUAGE=korean
+      - REPORT_FORMAT=markdown
     networks:
       - secondbrain-net
 

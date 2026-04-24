@@ -1,0 +1,2 @@
+FROM gptresearcher/gpt-researcher:latest
+RUN pip install -U duckduckgo-search --no-cache-dir

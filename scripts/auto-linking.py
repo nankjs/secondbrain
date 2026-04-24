@@ -17,16 +17,19 @@ import sys
 import time
 import urllib.request
 import urllib.error
+from datetime import datetime, timedelta
 from pathlib import Path
 
-LIGHTRAG_API = "http://localhost:9621"
+LIGHTRAG_API = os.environ.get("LIGHTRAG_API", "http://localhost:9621")
 VAULT_PATH = os.environ.get(
     "OBSIDIAN_VAULT_PATH",
     "C:/Users/kjswi/Documents/googleDrive/ObsiVault"
 )
+DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
+DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
 
 # 연결 분석할 폴더
-LINK_FOLDERS = ["01-literature", "02-permanent"]
+LINK_FOLDERS = ["01-literature", "02-permanent", "04-gemini"]
 
 # 강도 임계값
 THRESHOLD_STRONG = 0.7   # → Obsidian 링크 생성
@@ -74,51 +77,47 @@ def extract_title(content: str, filename: str) -> str:
 
 def analyze_relation(note_a_title: str, note_a_content: str,
                      note_b_title: str, note_b_content: str) -> dict:
-    """
-    /relate 스킬 로직 구현
-    두 노트 간의 관계 타입, 강도, 설명 반환
-    """
-    # 각 노트의 핵심 내용 (최대 500자)
+    """DeepSeek V3로 두 노트 간 관계 분석"""
     a_snippet = note_a_content[:500].replace("\n", " ")
     b_snippet = note_b_content[:500].replace("\n", " ")
 
-    # LightRAG에 관계 분석 질의
-    query = (
-        f"Analyze the semantic relationship between these two notes:\n\n"
-        f"Note A: '{note_a_title}'\n{a_snippet}\n\n"
-        f"Note B: '{note_b_title}'\n{b_snippet}\n\n"
-        f"Return JSON: {{\"relation_type\": \"context|extend|contradict|related|supports|inspired\", "
-        f"\"strength\": 0.0-1.0, \"description\": \"brief description in Korean (max 50 chars)\", "
+    prompt = (
+        f"두 노트의 의미적 관계를 분석하고 JSON만 반환하라. 다른 텍스트 없이 JSON만.\n\n"
+        f"노트 A: '{note_a_title}'\n{a_snippet}\n\n"
+        f"노트 B: '{note_b_title}'\n{b_snippet}\n\n"
+        f"반환 형식: {{\"relation_type\": \"context|extend|contradict|related|supports|inspired\", "
+        f"\"strength\": 0.0~1.0, \"description\": \"한국어 50자 이내\", "
         f"\"bidirectional\": true/false}}"
     )
 
     payload = json.dumps({
-        "query": query,
-        "mode": "naive",
-        "only_need_context": False,
-        "response_type": "Single Paragraph"
+        "model": "deepseek-chat",
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.1,
+        "max_tokens": 200,
     }).encode("utf-8")
 
     req = urllib.request.Request(
-        f"{LIGHTRAG_API}/query",
+        DEEPSEEK_API_URL,
         data=payload,
-        headers={"Content-Type": "application/json"},
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+        },
         method="POST"
     )
 
     try:
         with urllib.request.urlopen(req, timeout=30) as r:
             result = json.loads(r.read())
-            response = result.get("response", "")
+            response = result["choices"][0]["message"]["content"].strip()
 
-        # JSON 블록 추출
         json_match = re.search(r'\{[^{}]+\}', response, re.DOTALL)
         if json_match:
             return json.loads(json_match.group())
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"  [WARN] analyze_relation 실패: {e}", file=sys.stderr)
 
-    # 폴백: 기본값
     return {
         "relation_type": "related",
         "strength": 0.0,
@@ -187,6 +186,8 @@ def main():
     parser.add_argument("--threshold", type=float, default=THRESHOLD_STRONG,
                         help=f"링크 생성 임계값 (기본: {THRESHOLD_STRONG})")
     parser.add_argument("--folder", help="특정 폴더만 (예: 01-literature)")
+    parser.add_argument("--days-back", type=int, default=0,
+                        help="N일 이내 생성된 노트만 소스로 사용 (0=전체)")
     args = parser.parse_args()
 
     # LightRAG 상태 확인
@@ -214,14 +215,25 @@ def main():
         all_notes = [(p, t, c) for p, t, c in all_notes if args.note in p.name]
         print(f"필터: {args.note} → {len(all_notes)}개")
 
+    # --days-back: 소스 노트(A)를 최근 N일 이내로 제한
+    if args.days_back > 0:
+        cutoff = datetime.now() - timedelta(days=args.days_back)
+        source_notes = [
+            (p, t, c) for p, t, c in all_notes
+            if datetime.fromtimestamp(p.stat().st_mtime) >= cutoff
+        ]
+        print(f"소스 노트: {args.days_back}일 이내 {len(source_notes)}개 / 전체 대상: {len(all_notes)}개")
+    else:
+        source_notes = all_notes
+
     linked = 0
     skipped = 0
     pairs_analyzed = 0
 
-    # 모든 노트 쌍 분석 (N*(N-1)/2)
-    for i, (path_a, title_a, content_a) in enumerate(all_notes):
-        for j, (path_b, title_b, content_b) in enumerate(all_notes):
-            if i >= j:  # 중복 방지
+    # 소스 노트(신규) × 전체 노트 쌍 분석
+    for (path_a, title_a, content_a) in source_notes:
+        for (path_b, title_b, content_b) in all_notes:
+            if path_a == path_b:  # 자기 자신 제외
                 continue
 
             pairs_analyzed += 1

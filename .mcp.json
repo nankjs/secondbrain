@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "zettelkasten": {
+      "command": "python",
+      "args": ["-m", "zettelkasten_mcp.main"],
+      "env": {
+        "ZETTELKASTEN_NOTES_DIR": "C:/Users/kjswi/Documents/googleDrive/ObsiVault",
+        "ZETTELKASTEN_DATABASE_PATH": "C:/KJS/tools/zettelkasten-mcp/data/zettelkasten.db",
+        "ZETTELKASTEN_LOG_LEVEL": "WARNING"
+      }
+    }
+  }
+}
